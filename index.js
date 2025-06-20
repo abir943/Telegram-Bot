@@ -1,8 +1,9 @@
 const fs = require("fs");
 const path = require("path");
+const express = require("express");
 const TelegramBot = require("node-telegram-bot-api");
 
-// Load config safely
+// === Load Config ===
 const loadConfig = (filePath) => {
   try {
     if (!fs.existsSync(filePath)) {
@@ -28,15 +29,38 @@ if (!token) {
   process.exit(1);
 }
 
-// Global stores
+// === Global Stores ===
 global.commands = new Map();
 global.aliases = new Map();
 global.cooldowns = new Map();
 
-// Load commands
+// === Express Setup ===
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(express.static(path.join(__dirname, "public")));
+
+app.get("/", (req, res) => {
+  res.redirect("/dashboard.html");
+});
+
+app.get("/status", (req, res) => {
+  res.json({
+    bot: botName,
+    status: "🟢 Running",
+    totalCommands: global.commands.size
+  });
+});
+
+app.listen(PORT, () => {
+  console.log(`🌐 Dashboard Live: http://localhost:${PORT}/dashboard.html`);
+});
+
+// === Load Commands ===
 const loadCommands = () => {
   try {
-    const files = fs.readdirSync(path.join(__dirname, "cmds")).filter(f => f.endsWith(".js"));
+    const cmdPath = path.join(__dirname, "cmds");
+    const files = fs.readdirSync(cmdPath).filter(f => f.endsWith(".js"));
     for (const file of files) {
       delete require.cache[require.resolve(`./cmds/${file}`)];
       const cmd = require(`./cmds/${file}`);
@@ -54,16 +78,15 @@ const loadCommands = () => {
   }
 };
 
-// Cooldown helpers
+// === Cooldown Check ===
 const checkCooldown = (cmdName, userId) => {
   const now = Date.now();
   if (!global.cooldowns.has(userId)) return null;
 
   const userCooldowns = global.cooldowns.get(userId);
   const lastUsed = userCooldowns[cmdName] || 0;
-  const cooldownTime = 5000; // 5 seconds cooldown
+  const cooldownTime = 5000;
   const remaining = cooldownTime - (now - lastUsed);
-
   return remaining > 0 ? remaining : null;
 };
 
@@ -72,18 +95,20 @@ const setCooldown = (cmdName, userId) => {
   global.cooldowns.get(userId)[cmdName] = Date.now();
 };
 
-// Admin check
 const isAdmin = (userId) => {
-  return botAdmins.includes(String(userId));
+  return botAdmins.includes(String(userId)) || String(userId) === String(ownerID);
 };
 
-// Initialize bot
+// === Init Telegram Bot ===
 const bot = new TelegramBot(token, { polling: true });
-
 loadCommands();
 
 console.log(`🤖 ${botName} is online!`);
+bot.sendMessage(6036932600, `🚀 *${botName} is now live on localhost!*\nVisit: http://localhost:${PORT}/dashboard.html`, {
+  parse_mode: "Markdown"
+});
 
+// === Handle Messages ===
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
   const userId = String(msg.from.id);
@@ -91,36 +116,36 @@ bot.on("message", async (msg) => {
 
   if (!text.startsWith(botPrefix)) return;
 
-  let args = text.slice(botPrefix.length).trim().split(/ +/);
+  let args = text.slice(botPrefix.length).trim().split(/\s+/);
   let cmdName = args.shift().toLowerCase();
 
-  // Alias support
   if (global.aliases.has(cmdName)) {
     cmdName = global.aliases.get(cmdName);
   }
 
   const command = global.commands.get(cmdName);
   if (!command) {
-    return bot.sendMessage(chatId, `❌ Command '${cmdName}' not found.\n🛠 Use '${botPrefix}help' to see available commands.`);
+    return bot.sendMessage(chatId, `❌ Command \`${cmdName}\` not found.\nTry \`${botPrefix}help\` to see available commands.`, {
+      parse_mode: "Markdown"
+    });
   }
 
-  // Admin-only command check
   if (command.adminOnly && !isAdmin(userId)) {
-    return bot.sendMessage(chatId, "❌ You don't have permission to use this command.");
+    return bot.sendMessage(chatId, "🚫 You don't have permission to use this command.");
   }
 
-  // Cooldown check
   const remaining = checkCooldown(cmdName, userId);
   if (remaining) {
-    return bot.sendMessage(chatId, `⏳ Please wait ${Math.ceil(remaining / 1000)} seconds before using '${cmdName}' again.`);
+    return bot.sendMessage(chatId, `⏳ Wait ${Math.ceil(remaining / 1000)}s before using \`${cmdName}\` again.`, {
+      parse_mode: "Markdown"
+    });
   }
   setCooldown(cmdName, userId);
 
-  // Execute command
   try {
     await command.execute(bot, msg, args);
   } catch (error) {
-    console.error(`❌ Command '${cmdName}' error:`, error);
-    bot.sendMessage(chatId, `❌ An error occurred while executing '${cmdName}'.`);
+    console.error(`❌ Error in '${cmdName}':`, error);
+    bot.sendMessage(chatId, `⚠️ Error occurred in \`${cmdName}\`.`);
   }
 });
