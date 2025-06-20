@@ -16,6 +16,9 @@
     "nodejs",
     "telegram"
   ],
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "@types/node": "^18.0.6",
     "1secmail-api": "^1.1.1",
