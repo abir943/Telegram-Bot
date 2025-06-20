@@ -3,6 +3,7 @@ const os = require("os");
 module.exports = {
   name: "uptime",
   aliases: ["up"],
+  usePrefix: false, 
   adminOnly: false,
 
   async execute(bot, msg, args) {
