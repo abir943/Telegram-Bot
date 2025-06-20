@@ -1,0 +1,11 @@
+{
+  "botName": "𝐀𝐌𝐈𝐍𝐔𝐋-𝐁𝐎𝐓",
+  "botPrefix": "/",
+  "botAdmins": ["100071880593545"],
+  "ownerID": "100071880593545",
+  "token": "YOUR_TELEGRAM_BOT_TOKEN_HERE",
+  "option": {
+    "autoRestart": true,
+    "autoGreet": true
+  }
+}
