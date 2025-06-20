@@ -41,7 +41,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
-  res.redirect("/dashboard.html");
+  res.sendFile(path.join(__dirname, "public/index.html"));
 });
 
 app.get("/status", (req, res) => {
@@ -53,7 +53,7 @@ app.get("/status", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🌐 Dashboard Live: http://localhost:${PORT}/dashboard.html`);
+  console.log(`🌐 Web Server is running.`);
 });
 
 // === Load Commands ===
@@ -78,7 +78,7 @@ const loadCommands = () => {
   }
 };
 
-// === Cooldown Check ===
+// === Cooldown System ===
 const checkCooldown = (cmdName, userId) => {
   const now = Date.now();
   if (!global.cooldowns.has(userId)) return null;
@@ -104,7 +104,7 @@ const bot = new TelegramBot(token, { polling: true });
 loadCommands();
 
 console.log(`🤖 ${botName} is online!`);
-bot.sendMessage(6036932600, `🚀 *${botName} is now live on localhost!*\nVisit: http://localhost:${PORT}/dashboard.html`, {
+bot.sendMessage(ownerID, `🚀 *${botName} is now live!*`, {
   parse_mode: "Markdown"
 });
 
@@ -140,6 +140,7 @@ bot.on("message", async (msg) => {
       parse_mode: "Markdown"
     });
   }
+
   setCooldown(cmdName, userId);
 
   try {
