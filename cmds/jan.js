@@ -2,15 +2,14 @@ const axios = require("axios");
 
 module.exports = {
   name: "jan",
-  aliases: [],
+  aliases: ["jaan", "love", "hi", "count"],
   adminOnly: false,
-  usePrefix: false, // ⬅️ Disable prefix requirement
-  description: "Sweet replies + Q&A system with learning",
-
+  description: "Sweet replies or Q&A system via API",
+  
   // ===== Fetch total Q&A count from server =====
   async fetchCount() {
     try {
-      const res = await axios.get(`https://jan-api-by-aminul-sordar.vercel.app/count`);
+      const res = await axios.get(https://jan-api-by-aminul-sordar.vercel.app/count);
       return res.data;
     } catch (e) {
       console.error("fetchCount error:", e.message);
@@ -18,57 +17,31 @@ module.exports = {
     }
   },
 
-  // ===== Teach multiple questions at once =====
-  async teachMultiple(qaText) {
-    try {
-      const res = await axios.post(`https://jan-api-by-aminul-sordar.vercel.app/teach`, {
-        text: qaText
-      });
-      return res.data.message;
-    } catch (e) {
-      console.error("teachMultiple error:", e.message);
-      return "❌ শেখানো ব্যর্থ হয়েছে! সার্ভার সমস্যা হতে পারে।";
-    }
-  },
-
   async execute(bot, msg, args) {
     const chatId = msg.chat.id;
-    const body = msg.text?.trim().toLowerCase() || "";
+    const body = msg.text?.trim() || "";
+    const command = args[0]?.toLowerCase();
 
-    // === Handle Q&A Count Request ===
-    if (body.startsWith("count")) {
+    // === Handle "count" request ===
+    if (command === "count" || msg.text.toLowerCase().endsWith("count")) {
       const count = await this.fetchCount();
       return bot.sendMessage(
         chatId,
-        `📊 *জ্ঞানভাণ্ডার:*\n\n` +
-        `📌 মোট প্রশ্ন: *${count.questions}*\n` +
-        `📌 মোট উত্তর: *${count.answers}*\n\n` +
-        `💡 আমাকে আরও শেখানোর মাধ্যমে আরও স্মার্ট করুন!\n` +
-        `🔍 কিছু প্রশ্ন করুন, আমি চেষ্টা করব উত্তর দেওয়ার!`,
+        📊 *জ্ঞানভাণ্ডার:*\n\n +
+        📌 মোট প্রশ্ন: *${count.questions}*\n +
+        📌 মোট উত্তর: *${count.answers}*\n\n +
+        💡 আমাকে আরও শেখানোর মাধ্যমে আরও স্মার্ট করুন!\n +
+        🔍 কিছু প্রশ্ন করুন, আমি চেষ্টা করব উত্তর দেওয়ার!,
         { parse_mode: "Markdown" }
       );
     }
 
-    // === Handle Teach Command ===
-    if (body.startsWith("teach")) {
-      const input = body.slice(5).trim();
-      if (!input.includes(" - ")) {
-        return bot.sendMessage(chatId,
-          "❌ সঠিক ফরম্যাট ব্যবহার করুন:\n`teach প্রশ্ন - উত্তর`\n\nএকাধিক প্রশ্ন দিতে চাইলে `|` দিয়ে আলাদা করুন।",
-          { parse_mode: "Markdown" }
-        );
-      }
-
-      const resultMsg = await this.teachMultiple(input);
-      return bot.sendMessage(chatId, `✅ ${resultMsg}`);
-    }
-
-    // === Random Replies ===
+    // === Random reply logic ===
     const randomReplies = [
       "হ্যাঁ 😀, আমি এখানে আছি",
       "কেমন আছো?",
       "বলো জান কি করতে পারি তোমার জন্য",
-      `তুমি বলেছো: "${body}"? কিউট!`,
+      তুমি বলেছো: "${body}"? কিউট!,
       "I love you 💝",
       "ভালোবাসি তোমাকে 🤖",
       "Hi, I'm messenger Bot, I can help you.?🤖",
