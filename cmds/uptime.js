@@ -1,32 +1,43 @@
 const os = require("os");
-const ms = require("pretty-ms");
 
 module.exports = {
   name: "uptime",
-  aliases: ["up", "botup"],
-  description: "Displays bot and server uptime",
+  aliases: ["up"],
   adminOnly: false,
 
-  execute: async (bot, msg) => {
+  async execute(bot, msg, args) {
     const chatId = msg.chat.id;
 
-    const botUptime = process.uptime() * 1000;
-    const serverUptime = os.uptime() * 1000;
+    // Bot uptime
+    const totalSeconds = process.uptime();
+    const days = Math.floor(totalSeconds / (3600 * 24));
+    const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = Math.floor(totalSeconds % 60);
 
-    const format = (duration) => ms(duration, { verbose: true });
+    // System uptime
+    const systemUptime = os.uptime();
+    const sysHours = Math.floor(systemUptime / 3600);
+    const sysMinutes = Math.floor((systemUptime % 3600) / 60);
+    const sysSeconds = Math.floor(systemUptime % 60);
 
-    const response = `
-╭───────[🤖 𝐀𝐌𝐈𝐍𝐔𝐋-𝐁𝐎𝐓]───────╮
-│
-│ ⏱️ 𝗕𝗼𝘁 𝗨𝗽𝘁𝗶𝗺𝗲: ${format(botUptime)}
-│ 🖥️ 𝗦𝗲𝗿𝘃𝗲𝗿 𝗨𝗽𝘁𝗶𝗺𝗲: ${format(serverUptime)}
-│ 📡 𝗖𝗣𝗨: ${os.cpus()[0].model}
-│ 📊 𝗠𝗲𝗺𝗼𝗿𝘆: ${(os.totalmem() / 1024 / 1024).toFixed(2)} MB
-│ 🏷️ 𝗢𝗦: ${os.platform()} | ${os.arch()}
-│
-╰────────────────────────╯
-`;
+    // Current server time
+    const currentTime = new Date().toLocaleString("en-BD", {
+      timeZone: "Asia/Dhaka",
+      hour12: true
+    });
 
-    await bot.sendMessage(chatId, response.trim());
+    const text = `
+⏱ *Bot Uptime*
+🕐 ${days}d ${hours}h ${minutes}m ${seconds}s
+
+💻 *System Uptime*
+⌛ ${sysHours}h ${sysMinutes}m ${sysSeconds}s
+
+🗓 *Current Server Time*
+📆 ${currentTime}
+    `.trim();
+
+    bot.sendMessage(chatId, text, { parse_mode: "Markdown" });
   }
 };
