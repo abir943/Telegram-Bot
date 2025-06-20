@@ -1,13 +1,42 @@
+const axios = require("axios");
+
 module.exports = {
   name: "jan",
-  aliases: ["jaan", "love", "hi"],
+  aliases: ["jaan", "love", "hi", "count"],
   adminOnly: false,
-  description: "Sweet random replies like a girlfriend 🤭",
+  description: "Sweet replies or Q&A system via API",
   
+  // ===== Fetch total Q&A count from server =====
+  async fetchCount() {
+    try {
+      const res = await axios.get(`https://jan-api-by-aminul-sordar.vercel.app/count`);
+      return res.data;
+    } catch (e) {
+      console.error("fetchCount error:", e.message);
+      return { questions: 0, answers: 0 };
+    }
+  },
+
   async execute(bot, msg, args) {
     const chatId = msg.chat.id;
     const body = msg.text?.trim() || "";
+    const command = args[0]?.toLowerCase();
 
+    // === Handle "count" request ===
+    if (command === "count" || msg.text.toLowerCase().endsWith("count")) {
+      const count = await this.fetchCount();
+      return bot.sendMessage(
+        chatId,
+        `📊 *জ্ঞানভাণ্ডার:*\n\n` +
+        `📌 মোট প্রশ্ন: *${count.questions}*\n` +
+        `📌 মোট উত্তর: *${count.answers}*\n\n` +
+        `💡 আমাকে আরও শেখানোর মাধ্যমে আরও স্মার্ট করুন!\n` +
+        `🔍 কিছু প্রশ্ন করুন, আমি চেষ্টা করব উত্তর দেওয়ার!`,
+        { parse_mode: "Markdown" }
+      );
+    }
+
+    // === Random reply logic ===
     const randomReplies = [
       "হ্যাঁ 😀, আমি এখানে আছি",
       "কেমন আছো?",
@@ -33,10 +62,7 @@ module.exports = {
       "suna tomare amar valo lage,🙈😽"
     ];
 
-    // Pick a random reply
     const reply = randomReplies[Math.floor(Math.random() * randomReplies.length)];
-
-    // Send it
     return bot.sendMessage(chatId, reply);
   }
 };
