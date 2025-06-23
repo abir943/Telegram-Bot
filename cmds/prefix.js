@@ -4,9 +4,9 @@ const path = require("path");
 module.exports = {
   name: "prefix",
   aliases: [],
-  description: "View or update the bot's command prefix",
+  description: "View or update the bot's command prefix and info panel",
   author: "Aminul Sardar",
-  version: "1.1.0",
+  version: "1.2.0",
 
   async execute(bot, msg, args) {
     const chatId = msg.chat.id;
@@ -17,39 +17,53 @@ module.exports = {
     try {
       config = JSON.parse(fs.readFileSync(configPath, "utf8"));
     } catch (err) {
-      console.error("Config read error:", err.message);
-      return bot.sendMessage(chatId, "❌ Failed to read config file.");
+      console.error("❌ Failed to load config.json:", err.message);
+      return bot.sendMessage(chatId, "❌ Config file読み込みエラー。");
     }
 
-    // If no args, just show the info panel
-    if (!args.length) {
-      const botLink = `https://t.me/${bot.username}`;
-      const info = `🤖 𝐀𝐌𝐈𝐍𝐔𝐋-𝐁𝐎𝐓 Information Panel
-━━━━━━━━━━━━━━━━━━━━━━
-📍 Current Prefix: \`${config.botPrefix || "/"}\`
-🧠 Bot Name: ${config.botName || "TelegramBot"}
-🆔 Bot ID: ${bot.id}
-🔗 Bot Link: [Click Here](${botLink})
-👤 Owner ID: \`${config.ownerID}\`
-━━━━━━━━━━━━━━━━━━━━━━
-✨ Powered by: Aminul Sardar`;
+    const currentPrefix = config.botPrefix || "/";
+    const botLink = `https://t.me/${bot.username}`;
+    const isAdmin = global.isAdmin?.(userId) || userId === config.ownerID;
 
-      return bot.sendMessage(chatId, info, { parse_mode: "Markdown", disable_web_page_preview: true });
+    // No arguments: show info panel
+    if (!args.length || args[0].toLowerCase() === "info") {
+      const infoPanel = `🤖 𝐀𝐌𝐈𝐍𝐔𝐋-𝐁𝐎𝐓 Information Panel
+━━━━━━━━━━━━━━━━━━━━━━
+📍 *Current Prefix:* \`${currentPrefix}\`
+🧠 *Bot Name:* ${config.botName || bot.username}
+🆔 *Bot ID:* ${bot.id}
+🔗 *Bot Link:* [Click Here](${botLink})
+👤 *Owner ID:* \`${config.ownerID}\`
+━━━━━━━━━━━━━━━━━━━━━━
+✨ Powered by: *Aminul Sardar*`;
+
+      return bot.sendMessage(chatId, infoPanel, {
+        parse_mode: "Markdown",
+        disable_web_page_preview: true
+      });
     }
 
-    // Update prefix (admin only)
+    // Change prefix (admin only)
     const newPrefix = args[0];
-    if (!global.isAdmin(userId)) {
-      return bot.sendMessage(chatId, "🚫 You don’t have permission to change the prefix.");
+
+    if (!isAdmin) {
+      return bot.sendMessage(chatId, "🚫 You don’t have permission to update the prefix.");
+    }
+
+    if (newPrefix.length > 2) {
+      return bot.sendMessage(chatId, "⚠️ Prefix should be short (1–2 characters recommended).");
     }
 
     config.botPrefix = newPrefix;
+
     try {
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-      bot.sendMessage(chatId, `✅ Prefix updated to: \`${newPrefix}\``, { parse_mode: "Markdown" });
+      bot.sendMessage(chatId, `✅ Prefix successfully updated to: \`${newPrefix}\``, {
+        parse_mode: "Markdown"
+      });
     } catch (err) {
-      console.error("Prefix update error:", err.message);
-      bot.sendMessage(chatId, "❌ Failed to update prefix.");
+      console.error("❌ Failed to save config.json:", err.message);
+      bot.sendMessage(chatId, "❌ Prefix update failed.");
     }
   }
 };
