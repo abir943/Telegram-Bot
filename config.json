@@ -1,11 +1,9 @@
 {
-  "botName": "𝐀𝐌𝐈𝐍𝐔𝐋-𝐁𝐎𝐓",
-  "botPrefix": "/",
-  "botAdmins": ["6036932600"],
-  "ownerID": "6036932600",
+  "owner": "Aminulsordar",
+  "username": "𝐀𝐌𝐈𝐍𝐔𝐋-𝐁𝐎𝐓",
   "token": "8025092969:AAGsGehfwSia-rJrKJlGhB-QIW7-PugUKbs",
-  "option": {
-    "autoRestart": true,
-    "autoGreet": true
-  }
+  "prefix": "/",
+  "symbols": "●",
+  "admins": ["6036932600"],
+  "vips": ["8025092969:AAGsGehfwSia-rJrKJlGhB-QIW7-PugUKbs"]
 }
