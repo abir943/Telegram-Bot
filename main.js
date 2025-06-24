@@ -1,4 +1,5 @@
 // main.js
+
 const figlet = require('figlet');
 const gradient = require('gradient-string');
 const chalk = require('chalk');
@@ -11,21 +12,37 @@ const logger = require('./core/logger');
 global.commands = new Map();
 
 module.exports = function startBot(bot, config) {
-  console.log(gradient.rainbow(figlet.textSync("XYZ BOT", { horizontalLayout: "fitted" })));
-  console.log(chalk.cyan(`🤖 Username: @${config.username} | 👑 Owner: ${config.owner}`));
+  // Stylish ASCII Banner
+  console.log(
+    gradient.rainbow(
+      figlet.textSync("XYZ BOT", {
+        horizontalLayout: "fitted",
+      })
+    )
+  );
+
+  // Basic Info Output
+  console.log(chalk.cyan(`🤖 Username: @${config.username}`));
+  console.log(chalk.magenta(`👑 Owner: ${config.owner}`));
   console.log(chalk.yellow(`🔧 Prefix: "${config.prefix}" | Symbol: ${config.symbols || '•'}\n`));
 
   try {
+    // Load Commands and Events
     loadCommands('./script/commands');
     loadEvents('./script/events', bot);
-    logger.log(`XYZ BOT started.`, 'info');
 
+    // Log Status
+    logger.log(`✅ XYZ BOT started successfully.`, 'info');
+
+    // Register Message Listener
     registerListeners(bot, {
       onMessage: (msg) => handleMessage(bot, msg, config)
     });
 
-    logger.log(`${global.commands.size} command(s) loaded.`, 'success');
+    // Final Log
+    logger.log(`📦 ${global.commands.size} command(s) loaded.`, 'success');
+
   } catch (err) {
-    logger.log(`Startup error: ${err.message}`, 'error');
+    logger.log(`❌ Startup error: ${err.message}`, 'error');
   }
 };
